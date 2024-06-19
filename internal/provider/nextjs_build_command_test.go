@@ -49,7 +49,7 @@ func TestAccExampleResource(t *testing.T) {
 
 func testAccExampleResourceConfig(configurableAttribute string) string {
 	return fmt.Sprintf(`
-resource "scaffolding_example" "test" {
+resource "nextjs_build_command" "test" {
   configurable_attribute = %[1]q
 }
 `, configurableAttribute)

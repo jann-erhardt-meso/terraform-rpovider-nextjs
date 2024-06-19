@@ -26,7 +26,7 @@ func TestAccExampleDataSource(t *testing.T) {
 }
 
 const testAccExampleDataSourceConfig = `
-data "scaffolding_example" "test" {
+data "nextjs_build_output" "test" {
   configurable_attribute = "example"
 }
 `
