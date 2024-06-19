@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/jann-erhardt-meso/terraform-provider-nextjs
 
 go 1.21
 

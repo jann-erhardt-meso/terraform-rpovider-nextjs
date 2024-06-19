@@ -5,7 +5,9 @@ package provider
 
 import (
 	"context"
-	"net/http"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"os/exec"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -27,7 +29,7 @@ type NextJSProvider struct {
 
 // NextJSProviderModel describes the provider data model.
 type NextJSProviderModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
+	Executable types.String `tfsdk:"executable"`
 }
 
 func (p *NextJSProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -38,12 +40,21 @@ func (p *NextJSProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 func (p *NextJSProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "Example provider attribute",
+			"executable": schema.StringAttribute{
+				MarkdownDescription: "The 'npm' executable used to run the build commands for nextjs with.",
 				Optional:            true,
 			},
 		},
 	}
+}
+
+func detectExecutableVersion(executable string) (error, string) {
+	command := exec.Command(executable, "-v")
+	result, err := command.Output()
+	if err != nil {
+		return err, ""
+	}
+	return nil, string(result)
 }
 
 func (p *NextJSProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -56,12 +67,25 @@ func (p *NextJSProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	tflog.Trace(ctx, "Configuration init...")
+	if data.Executable.IsNull() {
+		err, version := detectExecutableVersion("npm")
+		if err != nil {
+			resp.Diagnostics.AddError("Error detecting NPM!", "Error detecting NPM version: "+err.Error())
+			return
+		}
+		data.Executable = types.StringValue("npm")
+		tflog.Trace(ctx, fmt.Sprintf("Executable Version detected: %s", version))
+	} else {
+		err, version := detectExecutableVersion(data.Executable.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error detecting %s!", data.Executable.ValueString()), "Error detecting NPM version: "+err.Error())
+			return
+		}
+		tflog.Trace(ctx, fmt.Sprintf("Executable Version detected: %s", version))
+	}
 
-	// Example client configuration for data sources and resources
-	client := http.DefaultClient
-	resp.DataSourceData = client
-	resp.ResourceData = client
+	resp.ResourceData = data.Executable.ValueString()
 }
 
 func (p *NextJSProvider) Resources(ctx context.Context) []func() resource.Resource {

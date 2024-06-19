@@ -5,9 +5,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,9 +19,7 @@ func NewBuildOutput() datasource.DataSource {
 }
 
 // BuildOutput defines the data source implementation.
-type BuildOutput struct {
-	client *http.Client
-}
+type BuildOutput struct{}
 
 // BuildOutputModel describes the data source data model.
 type BuildOutputModel struct {
@@ -59,19 +54,6 @@ func (d *BuildOutput) Configure(ctx context.Context, req datasource.ConfigureReq
 	if req.ProviderData == nil {
 		return
 	}
-
-	client, ok := req.ProviderData.(*http.Client)
-
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-
-	d.client = client
 }
 
 func (d *BuildOutput) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
